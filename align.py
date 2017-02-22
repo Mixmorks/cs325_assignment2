@@ -20,6 +20,10 @@ def file_2_dict(f_cost):
 	return d
 
 def edit_distance(d_cost, A, B):
+	#The alignment table uses string A and B with a - prepended to it.
+	A = '-' + A
+	B = '-' + B
+
    	#Generate empty array
    	a_edit_dist = [[0 for i in A] for j in B]
 
@@ -29,21 +33,19 @@ def edit_distance(d_cost, A, B):
 	#2 0 0 0 0
 	#3 0 0 0 0
 	#4 0 0 0 0
-	for i in range( len(A) ):
-		a_edit_dist[0][i] = i
+	a_edit_dist[0][0] = 0
+	for i in range( 1, len(A) ):
+		a_edit_dist[0][i] = a_edit_dist[0][i-1] + d_cost[A[i]]['-']
 
-	for j in range( len(B) ):
-	   	a_edit_dist[j][0] = j
+	for j in range( 1, len(B) ):
+	   	a_edit_dist[j][0] = a_edit_dist[j-1][0] + d_cost[B[j]]['-']
 
 	#Go through and fill the array based on the following:
-	#If letter match, distance remains unchanged. Use distance from diagonal position
-	#If letters do not match then distance becomes the minimum of surrounding blocks + effort to change that letter
+	#For each letter the effort is the minimum of surrounding blocks + effort to change that letter
+	#Keep in mind that matching letters have a cost of 0. i.e d_cost['A']['A'] = 0
 	for j in range( 1, len(B) ):
 		for i in range( 1, len(A) ):
-			if( A[i] == B[j] ):
-				a_edit_dist[j][i] = a_edit_dist[j-1][i-1]
-			else:
-				a_edit_dist[j][i] = min(a_edit_dist[j-1][i], a_edit_dist[j][i-1], a_edit_dist[j-1][i-1]) + d_cost[A[i]][B[j]]
+			a_edit_dist[j][i] = min(a_edit_dist[j-1][i], a_edit_dist[j][i-1], a_edit_dist[j-1][i-1]) + d_cost[A[i]][B[j]]
 
 	#Debug 
 	for i in range( len(B) ):
@@ -69,17 +71,20 @@ def align(A, B, a_edit_dist):
 			i = i - 1
 
 		#Diagonal step means we either swapped or the letters are equal
-		if min_cost == a_edit_dist[i-1][j-1]:
+		elif min_cost == a_edit_dist[i-1][j-1]:
 			aligned_A = A[j] + aligned_A
 			aligned_B = B[i] + aligned_B
 			i = i - 1
 			j = j - 1
 
 		#Step up means a gap on string B was matched with a letter from string A
-		if min_cost == a_edit_dist[i][j-1]:
+		elif min_cost == a_edit_dist[i][j-1]:
 			aligned_A = A[j] + aligned_A
 			aligned_B = '-'  + aligned_B
 			j = j - 1
+
+		else:
+			print "ERROR ERROR"
 
 	if j > 1:
 		aligned_A = A[:j] + aligned_A
@@ -100,7 +105,7 @@ if __name__== "__main__":
 	f_output = open('imp2output.txt', 'w')
 
 	d_cost = file_2_dict(f_cost)
-	
+
 	for line in f_data:
 		A, B = line.split(',')
 		B = B[:-1] #B will have a trailing newline, which needs to be removed
