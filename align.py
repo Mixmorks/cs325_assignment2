@@ -1,5 +1,6 @@
 import csv
 
+LOG_TO_TERMINAL = False
 DIAGONAL = 1
 UP = 2
 LEFT = 3
@@ -52,7 +53,6 @@ def edit_distance(d_cost, A, B):
         # Keep in mind that matching letters have a cost of 0. i.e d_cost['A']['A'] = 0
     for j in range(1, len(B)):
         for i in range(1, len(A)):
-            temp = 0
             if A[i] == B[j]:
                 temp = a_edit_dist[j - 1][i - 1]
             else:
@@ -70,13 +70,14 @@ def edit_distance(d_cost, A, B):
             else:
                 backtrace[j][i] = LEFT
 
-    for u in range(len(B)):
-        print a_edit_dist[u]
+    if LOG_TO_TERMINAL:
+        for u in range(len(B)):
+            print a_edit_dist[u]
 
     return a_edit_dist, backtrace
 
 
-def align(A, B, a_edit_dist, backtrace):
+def align(A, B, backtrace):
     # The theory here is that we'll start at the bottom right corner for the solved case
     # and step into the direction of lowest cost until we hit the top left corner building the string as we go.
     aligned_A = ""
@@ -90,9 +91,11 @@ def align(A, B, a_edit_dist, backtrace):
     while i > 0 and j > 0:
         # Diagonal step means we either swapped or the letters are equal
         # Order of these matters! A diagonal step is preferred as it implies no change
-        print "Checking a_edit_dist [" + str(i) + "][" + str(j) + "]"
-        print aligned_A
-        print aligned_B
+        if LOG_TO_TERMINAL:
+            print "Checking a_edit_dist [" + str(i) + "][" + str(j) + "]"
+            print aligned_A
+            print aligned_B
+
         if backtrace[i][j] == DIAGONAL:
             aligned_A = A[j - 1] + aligned_A
             aligned_B = B[i - 1] + aligned_B
@@ -119,16 +122,16 @@ def align(A, B, a_edit_dist, backtrace):
         aligned_A = '-' * i + aligned_A
         aligned_B = B[:i] + aligned_B
 
-    print aligned_A
-    print aligned_B
+    if LOG_TO_TERMINAL:
+        print aligned_A
+        print aligned_B
     return aligned_A, aligned_B
 
 
-if __name__ == "__main__":
-
-    f_cost = open('imp2cost.txt', 'r')
-    f_data = open('imp2input.txt', 'r')
-    f_output = open('imp2output.txt', 'w')
+def main(cost_filepath="imp2cost.txt", data_filepath="imp2input.txt", output_filepath="imp2output.txt"):
+    f_cost = open(cost_filepath, 'r')
+    f_data = open(data_filepath, 'r')
+    f_output = open(output_filepath, 'w')
 
     d_cost = file_2_dict(f_cost)
 
@@ -139,5 +142,9 @@ if __name__ == "__main__":
         # Generate the edit distance array and use that to build our aligned strings
         a_edit_dist, backtrace = edit_distance(d_cost, A, B)
 
-        a_A, a_B = align(A, B, a_edit_dist, backtrace)
+        a_A, a_B = align(A, B, backtrace)
         f_output.write(a_A + "," + a_B + ":" + str(a_edit_dist[len(B)][len(A)]) + "\n")
+
+
+if __name__ == "__main__":
+    main()
