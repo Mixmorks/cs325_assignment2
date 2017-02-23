@@ -51,7 +51,7 @@ def edit_distance(d_cost, A, B):
 			else:
 			   	temp = a_edit_dist[j-1][i-1] + d_cost[B[j]][A[i]]
 
-			a_edit_dist[j][i] = min( temp, a_edit_dist[j-1][i], a_edit_dist[j][i-1] )
+			a_edit_dist[j][i] = min( temp, a_edit_dist[j-1][i] + d_cost[B[j]]['-'], a_edit_dist[j][i-1] + d_cost['-'][A[i]])
 
 
 	for u in range(len(B)):
@@ -65,45 +65,47 @@ def align(A, B, a_edit_dist):
 	aligned_A = ""
 	aligned_B = ""
 
-	i = len(B)
-	j = len(A)
+	#i = len(B)
+	#j = len(A)
+	i = 0
+	j = 0
 
-	while i > 0 and j > 0:
-		min_cost = min(a_edit_dist[i-1][j], a_edit_dist[i-1][j-1], a_edit_dist[i][j-1])
+	while i < len(B) and j < len(A):
+		min_cost = min(a_edit_dist[i+1][j], a_edit_dist[i+1][j+1], a_edit_dist[i][j+1])
 		#Diagonal step means we either swapped or the letters are equal
 		#Order of these matters! A diagonal step is preferred as it implies no change
-		#print "Checking a_edit_dist [" + str(i) + "][" + str(j) + "]"
-		#print aligned_A
-		#print aligned_B
-		if min_cost == a_edit_dist[i-1][j-1]:
-			aligned_A = A[j-1] + aligned_A
-			aligned_B = B[i-1] + aligned_B
-			i = i - 1
-			j = j - 1
+		print "Checking a_edit_dist [" + str(i) + "][" + str(j) + "]"
+		print aligned_A
+		print aligned_B
+		if min_cost == a_edit_dist[i+1][j+1]:
+			aligned_A = aligned_A + A[j]
+			aligned_B = aligned_B + B[i]
+			i = i + 1
+			j = j + 1
 
 		#Step left means a gap on string A was matched with a letter at string B	
-		elif min_cost == a_edit_dist[i-1][j]:
-			aligned_A = '-'  + aligned_A
-			aligned_B = B[i-1] + aligned_B
-			i = i - 1
+		elif min_cost == a_edit_dist[i+1][j]:
+			aligned_A = aligned_A + '-'
+			aligned_B = aligned_B + B[i]
+			i = i + 1
 
 		#Step up means a gap on string B was matched with a letter from string A
-		elif min_cost == a_edit_dist[i][j-1]:
-			aligned_A = A[j-1] + aligned_A
-			aligned_B = '-'  + aligned_B
-			j = j - 1
+		elif min_cost == a_edit_dist[i][j+1]:
+			aligned_A = aligned_A + A[j]
+			aligned_B = aligned_B + '-'
+			j = j + 1
 
-		else:
-			print "ERROR ERROR"
 
-	if j > 0:
-		aligned_A = A[:j] + aligned_A
-		aligned_B = '-'*j + aligned_B
+	if j < len(A):
+		aligned_A = aligned_A + A[j]
+		aligned_B = aligned_B + '-'*(len(A)-j)
 
-	if i > 0:
-		aligned_A = '-'*i + aligned_A
-		aligned_B = B[:i] + aligned_B
-
+	if i < len(B):
+		aligned_A = aligned_A + '-'*(len(B)-i)
+		aligned_B = aligned_B + B[i:]
+	
+	print aligned_A
+	print aligned_B
 	return aligned_A, aligned_B
 		
 if __name__== "__main__":
@@ -122,7 +124,4 @@ if __name__== "__main__":
 		a_edit_dist = edit_distance(d_cost, A, B)
 
 		a_A, a_B = align(A, B, a_edit_dist)
-		print a_A
-		print a_B
-		A + 3
 		f_output.write(a_A + "," + a_B + ":" + str(a_edit_dist[len(B)][len(A)]) + "\n")
