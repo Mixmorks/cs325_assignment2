@@ -1,4 +1,7 @@
 import csv
+DIAGONAL = 1
+UP = 2
+LEFT = 3
 
 def file_2_dict(f_cost):
    	reader = csv.reader(f_cost, delimiter=',')
@@ -26,6 +29,7 @@ def edit_distance(d_cost, A, B):
 
    	#Generate empty array
    	a_edit_dist = [[0]*len(A) for j in B]
+	backtrace = [[0]*len(A) for j in B]
 
 	#Fill like this:
 	#0 1 2 3 4
@@ -52,57 +56,64 @@ def edit_distance(d_cost, A, B):
 			   	temp = a_edit_dist[j-1][i-1] + d_cost[B[j]][A[i]]
 
 			a_edit_dist[j][i] = min( temp, a_edit_dist[j-1][i] + d_cost[B[j]]['-'], a_edit_dist[j][i-1] + d_cost['-'][A[i]])
-
+			
+			if a_edit_dist[j][i] == temp:
+				backtrace[j][i] = DIAGONAL
+			
+			elif a_edit_dist[j][i] == a_edit_dist[j-1][i] + d_cost[B[j]]['-']:
+				backtrace[j][i] = UP
+				
+			else:
+				backtrace[j][i] = LEFT
 
 	for u in range(len(B)):
 		print a_edit_dist[u]
 
-	return a_edit_dist
+	return a_edit_dist, backtrace
 	
-def align(A, B, a_edit_dist):
+def align(A, B, a_edit_dist, backtrace):
 	#The theory here is that we'll start at the bottom right corner for the solved case
 	#and step into the direction of lowest cost until we hit the top left corner building the string as we go.
 	aligned_A = ""
 	aligned_B = ""
 
-	#i = len(B)
-	#j = len(A)
-	i = 0
-	j = 0
+	i = len(B)
+	j = len(A)
+	#i = 0
+	#j = 0
 
-	while i < len(B) and j < len(A):
-		min_cost = min(a_edit_dist[i+1][j], a_edit_dist[i+1][j+1], a_edit_dist[i][j+1])
+	while i > 0 and j > 0:
 		#Diagonal step means we either swapped or the letters are equal
 		#Order of these matters! A diagonal step is preferred as it implies no change
 		print "Checking a_edit_dist [" + str(i) + "][" + str(j) + "]"
 		print aligned_A
 		print aligned_B
-		if min_cost == a_edit_dist[i+1][j+1]:
-			aligned_A = aligned_A + A[j]
-			aligned_B = aligned_B + B[i]
-			i = i + 1
-			j = j + 1
+		if backtrace[i][j] == DIAGONAL:
+			aligned_A = A[j-1] + aligned_A
+			aligned_B = B[i-1] + aligned_B
+			i = i - 1
+			j = j - 1
 
-		#Step left means a gap on string A was matched with a letter at string B	
-		elif min_cost == a_edit_dist[i+1][j]:
-			aligned_A = aligned_A + '-'
-			aligned_B = aligned_B + B[i]
-			i = i + 1
+		#Step up means a gap on string A was matched with a letter at string B	
+		elif backtrace[i][j] == UP:
+			aligned_A = '-' + aligned_A
+			aligned_B = B[i-1] + aligned_B
+			i = i - 1
 
-		#Step up means a gap on string B was matched with a letter from string A
-		elif min_cost == a_edit_dist[i][j+1]:
-			aligned_A = aligned_A + A[j]
-			aligned_B = aligned_B + '-'
-			j = j + 1
+		#Step left means a gap on string B was matched with a letter from string A
+		else:
+			aligned_A = A[j-1] + aligned_A
+			aligned_B = '-' + aligned_B
+			j = j - 1
 
 
-	if j < len(A):
-		aligned_A = aligned_A + A[j]
-		aligned_B = aligned_B + '-'*(len(A)-j)
+	if j > 0:
+		aligned_A = A[:j] + aligned_A
+		aligned_B = '-'*j + aligned_B
 
-	if i < len(B):
-		aligned_A = aligned_A + '-'*(len(B)-i)
-		aligned_B = aligned_B + B[i:]
+	if i > 0:
+		aligned_A = '-'*i + aligned_A
+		aligned_B = B[:i] + aligned_B
 	
 	print aligned_A
 	print aligned_B
@@ -120,8 +131,9 @@ if __name__== "__main__":
 		A, B = line.split(',')
 		B = B[:-1] #B will have a trailing newline, which needs to be removed
 		
+		
 		#Generate the edit distance array and use that to build our aligned strings
-		a_edit_dist = edit_distance(d_cost, A, B)
+		a_edit_dist, backtrace = edit_distance(d_cost, A, B)
 
-		a_A, a_B = align(A, B, a_edit_dist)
+		a_A, a_B = align(A, B, a_edit_dist, backtrace)
 		f_output.write(a_A + "," + a_B + ":" + str(a_edit_dist[len(B)][len(A)]) + "\n")
