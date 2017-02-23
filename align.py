@@ -25,7 +25,7 @@ def edit_distance(d_cost, A, B):
 	B = '-' + B
 
    	#Generate empty array
-   	a_edit_dist = [[0 for i in A] for j in B]
+   	a_edit_dist = [[0]*len(A) for j in B]
 
 	#Fill like this:
 	#0 1 2 3 4
@@ -45,11 +45,17 @@ def edit_distance(d_cost, A, B):
 	#Keep in mind that matching letters have a cost of 0. i.e d_cost['A']['A'] = 0
 	for j in range( 1, len(B) ):
 		for i in range( 1, len(A) ):
-			a_edit_dist[j][i] = min(a_edit_dist[j-1][i], a_edit_dist[j][i-1], a_edit_dist[j-1][i-1]) + d_cost[A[i]][B[j]]
+		   	temp = 0
+			if A[i] == B[j]:
+				temp = a_edit_dist[j-1][i-1]
+			else:
+			   	temp = a_edit_dist[j-1][i-1] + d_cost[B[j]][A[i]]
 
-	#Debug 
-	for i in range( len(B) ):
-		print a_edit_dist[i]
+			a_edit_dist[j][i] = min( temp, a_edit_dist[j-1][i], a_edit_dist[j][i-1] )
+
+
+	for u in range(len(B)):
+		print a_edit_dist[u]
 
 	return a_edit_dist
 	
@@ -59,44 +65,46 @@ def align(A, B, a_edit_dist):
 	aligned_A = ""
 	aligned_B = ""
 
-	i = len(B) - 1
-	j = len(A) - 1
+	i = len(B)
+	j = len(A)
 
-	while i != 0 and j != 0:
+	while i > 0 and j > 0:
 		min_cost = min(a_edit_dist[i-1][j], a_edit_dist[i-1][j-1], a_edit_dist[i][j-1])
-		#Step left means a gap on string A was matched with a letter at string B
-		if min_cost == a_edit_dist[i-1][j]:
-			aligned_A = '-'  + aligned_A
-			aligned_B = B[i] + aligned_B
-			i = i - 1
-
 		#Diagonal step means we either swapped or the letters are equal
-		elif min_cost == a_edit_dist[i-1][j-1]:
-			aligned_A = A[j] + aligned_A
-			aligned_B = B[i] + aligned_B
+		#Order of these matters! A diagonal step is preferred as it implies no change
+		#print "Checking a_edit_dist [" + str(i) + "][" + str(j) + "]"
+		#print aligned_A
+		#print aligned_B
+		if min_cost == a_edit_dist[i-1][j-1]:
+			aligned_A = A[j-1] + aligned_A
+			aligned_B = B[i-1] + aligned_B
 			i = i - 1
 			j = j - 1
 
+		#Step left means a gap on string A was matched with a letter at string B	
+		elif min_cost == a_edit_dist[i-1][j]:
+			aligned_A = '-'  + aligned_A
+			aligned_B = B[i-1] + aligned_B
+			i = i - 1
+
 		#Step up means a gap on string B was matched with a letter from string A
 		elif min_cost == a_edit_dist[i][j-1]:
-			aligned_A = A[j] + aligned_A
+			aligned_A = A[j-1] + aligned_A
 			aligned_B = '-'  + aligned_B
 			j = j - 1
 
 		else:
 			print "ERROR ERROR"
 
-	if j > 1:
+	if j > 0:
 		aligned_A = A[:j] + aligned_A
 		aligned_B = '-'*j + aligned_B
 
-	if i > 1:
+	if i > 0:
 		aligned_A = '-'*i + aligned_A
 		aligned_B = B[:i] + aligned_B
 
-	print aligned_A
-	print aligned_B
-	print a_edit_dist[len(B)-1][len(A)-1]
+	return aligned_A, aligned_B
 		
 if __name__== "__main__":
 	
@@ -109,8 +117,12 @@ if __name__== "__main__":
 	for line in f_data:
 		A, B = line.split(',')
 		B = B[:-1] #B will have a trailing newline, which needs to be removed
-
+		
 		#Generate the edit distance array and use that to build our aligned strings
 		a_edit_dist = edit_distance(d_cost, A, B)
 
-		A, B = align(A, B, a_edit_dist)
+		a_A, a_B = align(A, B, a_edit_dist)
+		print a_A
+		print a_B
+		A + 3
+		f_output.write(a_A + "," + a_B + ":" + str(a_edit_dist[len(B)][len(A)]) + "\n")
