@@ -11,6 +11,7 @@ def wrapper(func, *args, **kwargs):
         return func(*args, **kwargs)
     return wrapped
 
+
 def build_sequence_pairs(num_pairs=10):
     pairs = []
     for i in range(0, num_pairs):
@@ -23,8 +24,9 @@ def build_sequence_pairs(num_pairs=10):
 
     return pairs
 
-def handle_line(d_cost, line):
-    A, B = line.strip('\n').split(',')
+
+def align_sequence(d_cost, sequence):
+    A, B = sequence.split(',')
     B = B[:-1]  # B will have a trailing newline, which needs to be removed
 
     # Generate the edit distance array and use that to build our aligned strings
@@ -32,24 +34,15 @@ def handle_line(d_cost, line):
 
     align(A, B, backtrace)
 
-def calculate_runtime():
-    total_time = 0
-
-    f_cost = open("imp2cost.txt", 'r')
-    f_data = open("imp2input.txt", 'r')
-
-    d_cost = file_2_dict(f_cost)
-
-    for line in f_data:
-        wrapped = wrapper(handle_line, d_cost, line)
-        total_time = timeit(wrapped, number=1)
-
-    return total_time
 
 if __name__ == "__main__":
-    for length in lengths:
-        with open("imp2input.txt", 'w') as f:
-            for pair in build_sequence_pairs():
-                f.write(pair)
+    f_cost = open("imp2cost.txt", 'r')
+    d_cost = file_2_dict(f_cost)
 
-        print calculate_runtime()
+    for length in lengths:
+        time = 0
+        for pair in build_sequence_pairs():
+            wrapped = wrapper(align_sequence, d_cost, pair)
+            time += timeit(wrapped, number=1)
+
+        print "Averaged", time/10, "seconds for length", length

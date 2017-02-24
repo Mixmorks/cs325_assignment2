@@ -136,7 +136,7 @@ def main(cost_filepath="imp2cost.txt", data_filepath="imp2input.txt", output_fil
     d_cost = file_2_dict(f_cost)
 
     for line in f_data:
-        A, B = line.strip('\n').split(',')
+        A, B = line.split(',')
         B = B[:-1]  # B will have a trailing newline, which needs to be removed
 
         # Generate the edit distance array and use that to build our aligned strings
