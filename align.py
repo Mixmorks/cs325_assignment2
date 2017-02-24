@@ -53,10 +53,7 @@ def edit_distance(d_cost, A, B):
         # Keep in mind that matching letters have a cost of 0. i.e d_cost['A']['A'] = 0
     for j in range(1, len(B)):
         for i in range(1, len(A)):
-            if A[i] == B[j]:
-                temp = a_edit_dist[j - 1][i - 1]
-            else:
-                temp = a_edit_dist[j - 1][i - 1] + d_cost[B[j]][A[i]]
+            temp = a_edit_dist[j - 1][i - 1] + d_cost[B[j]][A[i]]
 
             a_edit_dist[j][i] = min(temp, a_edit_dist[j - 1][i] + d_cost[B[j]]['-'],
                                     a_edit_dist[j][i - 1] + d_cost['-'][A[i]])
