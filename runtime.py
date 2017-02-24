@@ -12,14 +12,17 @@ def wrapper(func, *args, **kwargs):
     return wrapped
 
 
-def build_sequence_pairs(num_pairs=10):
+def build_sequence_pairs(length_x, length_y, num_pairs=10):
     pairs = []
-    for i in range(0, num_pairs):
+    for rep in range(0, num_pairs):
         sequence1 = ""
         sequence2 = ""
-        for j in range(0, length):
+
+        for x in range(0, length_x):
             sequence1 += alphabet[randint(0, len(alphabet) - 1)]
+        for y in range(0, length_y):
             sequence2 += alphabet[randint(0, len(alphabet) - 1)]
+
         pairs.append(sequence1 + ',' + sequence2 + '\n')
 
     return pairs
@@ -39,10 +42,11 @@ if __name__ == "__main__":
     f_cost = open("imp2cost.txt", 'r')
     d_cost = file_2_dict(f_cost)
 
-    for length in lengths:
-        time = 0
-        for pair in build_sequence_pairs():
-            wrapped = wrapper(align_sequence, d_cost, pair)
-            time += timeit(wrapped, number=1)
+    for length_x in lengths:
+        for length_y in lengths:
+            time = 0
+            for pair in build_sequence_pairs(length_x, length_y):
+                wrapped = wrapper(align_sequence, d_cost, pair)
+                time += timeit(wrapped, number=1)
 
-        print "Averaged", time/10, "seconds for length", length
+            print "Averaged", time/10, "seconds for " + str(length_x) + "x" + str(length_y)
